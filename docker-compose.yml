@@ -1,0 +1,121 @@
+services:
+  nats:
+    image: nats:latest
+    container_name: chat-api-nats-test
+    restart: unless-stopped
+    ports:
+      - "4222:4222"
+      - "8080:8080"
+      - "8222:8222"
+    volumes:
+      - ./nats.conf:/etc/nats/nats.conf
+      - nats-data:/data/jetstream
+    command: -c /etc/nats/nats.conf
+    networks:
+      - chat-network
+
+  mongo:
+    image: mongo:7
+    container_name: chat-api-mongo-test
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - chat-network
+
+  mongo-express:
+    image: mongo-express:latest
+    container_name: chat-api-mongo-express-test
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: admin
+      ME_CONFIG_MONGODB_ADMINPASSWORD: password
+      ME_CONFIG_MONGODB_URL: mongodb://admin:password@mongo:27017/
+      ME_CONFIG_BASICAUTH: false
+    depends_on:
+      mongo:
+        condition: service_healthy
+    networks:
+      - chat-network
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: chat-api-backend-test
+    working_dir: /app
+    command: npm run dev --workspace=apps/api
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=development
+      - PORT=3001
+      - MONGO_URI=mongodb://admin:password@mongo:27017/chat?authSource=admin
+      - MONGO_CONN=mongodb://admin:password@mongo:27017/chat?authSource=admin
+      - BROKER_SERVERS=nats://nats:4222
+      - REDIS_URL=redis://redis:6379
+      - NATS_URL=nats://nats:4222
+      - BROKER_AUTH_TOKEN=dev-token
+      - BROKER_USER_JWT=test-jwt
+      - BROKER_USER_SEED=test-seed
+      - JWT_SECRET=${JWT_SECRET:-dev_secret_change_in_production_min_32_chars}
+      - JWT_EXPIRES_IN=7d
+      - CORS_ORIGIN=http://localhost:3000
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/apps/api/node_modules
+    depends_on:
+      mongo:
+        condition: service_healthy
+      nats:
+        condition: service_started
+    networks:
+      - chat-network
+    restart: unless-stopped
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: chat-api-frontend-test
+    working_dir: /app
+    command: npm run dev --workspace=apps/web -- --hostname 0.0.0.0
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - NEXT_PUBLIC_API_URL=http://localhost:3001
+      - NEXT_PUBLIC_NATS_WS_URL=ws://localhost:8080
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/apps/web/node_modules
+    depends_on:
+      - api
+    networks:
+      - chat-network
+    restart: unless-stopped
+
+volumes:
+  mongo-data:
+    driver: local
+  nats-data:
+    driver: local
+
+networks:
+  chat-network:
+    driver: bridge

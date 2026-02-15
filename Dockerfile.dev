@@ -1,0 +1,16 @@
+FROM node:24.11.0-alpine
+
+RUN apk add --no-cache libc6-compat
+
+WORKDIR /app
+
+COPY package.json ./
+
+COPY apps/api/package.json apps/api/package-lock.json* ./apps/api/
+COPY apps/web/package.json apps/web/package-lock.json* ./apps/web/
+
+RUN npm install
+
+EXPOSE 3000 3001
+
+CMD ["npm", "run", "dev"]
