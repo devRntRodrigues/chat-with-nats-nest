@@ -3,7 +3,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { PassportModule } from '@nestjs/passport';
 import { User, UserSchema } from '@/models/User';
 import { PresenceController } from './presence.controller';
-import { PresenceService } from '@/services/presence.service';
+import { PresenceService } from '@/presence/presence.service';
 import { JwtStrategy } from '@/config/passport';
 import { BrokerModule } from '@/broker/broker.module';
 

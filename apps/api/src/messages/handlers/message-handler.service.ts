@@ -1,9 +1,9 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { Message, MessageDocument } from '../models/Message';
-import { Conversation, ConversationDocument } from '../models/Conversation';
-import { User, UserDocument } from '../models/User';
+import { Message, MessageDocument } from '@/models/Message';
+import { Conversation, ConversationDocument } from '@/models/Conversation';
+import { User, UserDocument } from '../../models/User';
 import { BrokerClientService } from '@/broker/broker-client.service';
 import type { Msg } from '@nats-io/nats-core';
 
@@ -39,25 +39,21 @@ export class MessageHandlerService implements OnModuleInit {
   onModuleInit() {
     this.logger.log('Initializing NATS message handlers...');
 
-    // Subscribe to message send requests
     this.brokerClient.subscribe(
       'chat.message.send',
       this.handleSendMessage.bind(this),
     );
 
-    // Subscribe to message read notifications
     this.brokerClient.subscribe(
       'chat.message.read',
       this.handleMarkRead.bind(this),
     );
 
-    // Subscribe to typing start notifications
     this.brokerClient.subscribe(
       'chat.typing.start',
       this.handleTypingStart.bind(this),
     );
 
-    // Subscribe to typing stop notifications
     this.brokerClient.subscribe(
       'chat.typing.stop',
       this.handleTypingStop.bind(this),
@@ -74,7 +70,6 @@ export class MessageHandlerService implements OnModuleInit {
     try {
       const { from, to, content } = payload;
 
-      // Validate ObjectIds
       if (!Types.ObjectId.isValid(from) || !Types.ObjectId.isValid(to)) {
         if (msg.reply) {
           msg.respond(
@@ -87,7 +82,6 @@ export class MessageHandlerService implements OnModuleInit {
         return;
       }
 
-      // Validate users exist
       const [fromUser, toUser] = await Promise.all([
         this.userModel.findById(from),
         this.userModel.findById(to),
@@ -105,7 +99,6 @@ export class MessageHandlerService implements OnModuleInit {
         return;
       }
 
-      // Create message
       const message = await this.messageModel.create({
         from: new Types.ObjectId(from),
         to: new Types.ObjectId(to),
@@ -113,7 +106,6 @@ export class MessageHandlerService implements OnModuleInit {
         read: false,
       });
 
-      // Update or create conversation
       const participants = [
         new Types.ObjectId(from),
         new Types.ObjectId(to),
@@ -129,14 +121,12 @@ export class MessageHandlerService implements OnModuleInit {
         { upsert: true, new: true },
       );
 
-      // Populate message for response
       const populatedMessage = await this.messageModel
         .findById(message._id)
         .populate('from', 'name username')
         .populate('to', 'name username')
         .lean();
 
-      // Reply to sender
       if (msg.reply) {
         msg.respond(
           JSON.stringify({
@@ -146,12 +136,10 @@ export class MessageHandlerService implements OnModuleInit {
         );
       }
 
-      // Publish to recipient
       this.brokerClient.publish(`chat.user.${to}.message.new`, {
         message: populatedMessage,
       });
 
-      // Publish notification to recipient
       this.brokerClient.publish(`chat.user.${to}.notification`, {
         id: message._id.toString(),
         type: 'message',
@@ -191,7 +179,6 @@ export class MessageHandlerService implements OnModuleInit {
         return;
       }
 
-      // Validate ObjectIds
       const validMessageIds = messageIds.filter((id) =>
         Types.ObjectId.isValid(id),
       );
@@ -200,7 +187,6 @@ export class MessageHandlerService implements OnModuleInit {
         return;
       }
 
-      // Mark messages as read
       const result = await this.messageModel.updateMany(
         {
           _id: { $in: validMessageIds.map((id) => new Types.ObjectId(id)) },
@@ -214,19 +200,14 @@ export class MessageHandlerService implements OnModuleInit {
       );
 
       if (result.modifiedCount > 0) {
-        // Get affected messages to notify senders
         const messages = await this.messageModel
           .find({
             _id: { $in: validMessageIds.map((id) => new Types.ObjectId(id)) },
           })
           .lean();
 
-        // Group by sender
-        const senderIds = new Set(
-          messages.map((m) => m.from.toString()),
-        );
+        const senderIds = new Set(messages.map((m) => m.from.toString()));
 
-        // Notify each sender
         for (const senderId of senderIds) {
           const senderMessageIds = messages
             .filter((m) => m.from.toString() === senderId)
@@ -247,14 +228,10 @@ export class MessageHandlerService implements OnModuleInit {
     }
   }
 
-  private async handleTypingStart(
-    _subject: string,
-    payload: TypingPayload,
-  ): Promise<void> {
+  private handleTypingStart(_subject: string, payload: TypingPayload): void {
     try {
       const { from, to, username } = payload;
 
-      // Publish to recipient
       this.brokerClient.publish(`chat.user.${to}.typing`, {
         action: 'start',
         from,
@@ -267,14 +244,10 @@ export class MessageHandlerService implements OnModuleInit {
     }
   }
 
-  private async handleTypingStop(
-    _subject: string,
-    payload: TypingPayload,
-  ): Promise<void> {
+  private handleTypingStop(_subject: string, payload: TypingPayload): void {
     try {
       const { from, to } = payload;
 
-      // Publish to recipient
       this.brokerClient.publish(`chat.user.${to}.typing`, {
         action: 'stop',
         from,

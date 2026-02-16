@@ -6,7 +6,7 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
-import { AuthService } from '@/services/auth.service';
+import { AuthService } from '@/auth/auth.service';
 import { LocalAuthGuard } from '@/common/guards/local-auth.guard';
 import { User } from '@/common/decorators/user.decorator';
 import type { AuthUser } from '@/config/passport';

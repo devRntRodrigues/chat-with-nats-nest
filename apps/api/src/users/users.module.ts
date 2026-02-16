@@ -3,7 +3,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { PassportModule } from '@nestjs/passport';
 import { User, UserSchema } from '@/models/User';
 import { UsersController } from './users.controller';
-import { UserService } from '@/services/user.service';
+import { UserService } from '@/users/user.service';
 import { JwtStrategy } from '@/config/passport';
 
 @Module({
