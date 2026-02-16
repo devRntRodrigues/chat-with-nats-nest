@@ -5,7 +5,6 @@ import { useNats } from '@/contexts/NatsContext';
 import { useAuth } from '@/contexts/AuthContext';
 import type { ChatMessage } from '@/types/chat';
 
-// Event types definition
 export enum ChatEventType {
   MESSAGE_NEW = 'message.new',
   MESSAGE_READ = 'message.read',
@@ -14,13 +13,13 @@ export enum ChatEventType {
   NOTIFICATION = 'notification',
 }
 
-// Event payloads
 export interface MessageNewPayload {
   message: ChatMessage;
 }
 
 export interface MessageReadPayload {
   messageIds: string[];
+  conversationId: string;
 }
 
 export interface TypingPayload {
@@ -48,7 +47,6 @@ export interface NotificationPayload {
   timestamp: Date;
 }
 
-// Event handler types
 export type MessageNewHandler = (payload: MessageNewPayload) => void;
 export type MessageReadHandler = (payload: MessageReadPayload) => void;
 export type TypingHandler = (payload: TypingPayload) => void;
@@ -63,27 +61,18 @@ export interface ChatEventHandlers {
   onNotification?: NotificationHandler;
 }
 
-/**
- * Hook centralizado para gerenciar todas as subscriptions de eventos NATS
- * do chat. Consolida a lógica que estava espalhada em vários hooks.
- * 
- * @param handlers - Objeto com handlers para cada tipo de evento
- * @returns Função para cleanup manual (opcional, já faz cleanup automático)
- */
 export function useChatEvents(handlers: ChatEventHandlers) {
   const { isConnected, subscribe } = useNats();
   const { user } = useAuth();
   const subscriptionsRef = useRef<Map<string, any>>(new Map());
   const handlersRef = useRef(handlers);
 
-  // Update handlers ref when they change
   useEffect(() => {
     handlersRef.current = handlers;
   }, [handlers]);
 
   useEffect(() => {
     if (!isConnected || !user) {
-      // Clear all subscriptions if not connected or user is not available
       for (const [_key, sub] of subscriptionsRef.current.entries()) {
         if (sub) {
           try {
