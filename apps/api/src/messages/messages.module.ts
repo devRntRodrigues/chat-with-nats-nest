@@ -5,8 +5,8 @@ import { Message, MessageSchema } from '@/models/Message';
 import { Conversation, ConversationSchema } from '@/models/Conversation';
 import { User, UserSchema } from '@/models/User';
 import { MessagesController } from './messages.controller';
-import { MessageService } from '@/services/message.service';
-import { MessageHandlerService } from '@/services/message-handler.service';
+import { MessageService } from '@/messages/message.service';
+import { MessageHandlerService } from '@/messages/handlers/message-handler.service';
 import { JwtStrategy } from '@/config/passport';
 import { BrokerModule } from '@/broker/broker.module';
 

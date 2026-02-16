@@ -20,11 +20,10 @@ export class PresenceService {
     @InjectModel(User.name) private userModel: Model<UserDocument>,
     private readonly brokerClient: BrokerClientService,
   ) {
-    // Start cleanup interval
     this.startCleanupInterval();
   }
 
-  async handleHeartbeat(userId: string): Promise<void> {
+  handleHeartbeat(userId: string): void {
     const now = Date.now();
     const wasOffline = !this.onlineUsers.has(userId);
 
@@ -33,14 +32,13 @@ export class PresenceService {
       lastHeartbeat: now,
     });
 
-    // Update last seen in database
-    await this.userModel.findByIdAndUpdate(userId, {
+    this.userModel.findByIdAndUpdate(userId, {
       lastSeen: new Date(now),
     });
 
     if (wasOffline) {
       this.logger.log(`User ${userId} is now online`);
-      await this.broadcastOnlineUsers();
+      this.broadcastOnlineUsers();
     }
   }
 
@@ -58,7 +56,7 @@ export class PresenceService {
     }, this.CLEANUP_INTERVAL);
   }
 
-  private async cleanupOfflineUsers(): Promise<void> {
+  private cleanupOfflineUsers(): void {
     const now = Date.now();
     const offlineUserIds: string[] = [];
 
@@ -73,13 +71,13 @@ export class PresenceService {
       this.logger.log(
         `Marking ${offlineUserIds.length} users as offline: ${offlineUserIds.join(', ')}`,
       );
-      await this.broadcastOnlineUsers();
+      this.broadcastOnlineUsers();
     }
   }
 
-  private async broadcastOnlineUsers(): Promise<void> {
+  private broadcastOnlineUsers(): void {
     const onlineUserIds = this.getOnlineUsers();
-    
+
     this.brokerClient.publish('chat.presence.online', {
       userIds: onlineUserIds,
       timestamp: Date.now(),
@@ -90,11 +88,11 @@ export class PresenceService {
     );
   }
 
-  async removeUser(userId: string): Promise<void> {
+  removeUser(userId: string): void {
     if (this.onlineUsers.has(userId)) {
       this.onlineUsers.delete(userId);
       this.logger.log(`User ${userId} explicitly disconnected`);
-      await this.broadcastOnlineUsers();
+      this.broadcastOnlineUsers();
     }
   }
 }

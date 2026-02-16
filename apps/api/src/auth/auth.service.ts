@@ -73,7 +73,11 @@ export class AuthService {
     };
   }
 
-  login(user: AuthUser): { user: AuthUser; token: string; authenticator: string } {
+  login(user: AuthUser): {
+    user: AuthUser;
+    token: string;
+    authenticator: string;
+  } {
     const token = this.generateToken(user.id);
     const authenticator = this.getBrokerAuthenticator();
     return { user, token, authenticator };

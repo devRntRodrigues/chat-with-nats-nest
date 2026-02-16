@@ -6,14 +6,14 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useNotifications } from '@/contexts/NotificationContext';
 import { chatApi } from '@/lib/chatApi';
 import type { ChatMessage } from '@/types/chat';
+import type {
+  MessageNewPayload,
+  MessageReadPayload,
+  TypingPayload,
+  NotificationPayload,
+} from '@/types/events';
 import { usePresence } from './usePresence';
-import {
-  useChatEvents,
-  type MessageNewPayload,
-  type MessageReadPayload,
-  type TypingPayload,
-  type NotificationPayload,
-} from './useChatEvents';
+import { useChatEvents } from './useChatEvents';
 
 export function useChat() {
   const { isConnected, request, publish } = useNats();

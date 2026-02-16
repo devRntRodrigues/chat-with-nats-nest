@@ -3,7 +3,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { apiPost } from '@/lib/http';
-import { useChatEvents, type PresencePayload } from './useChatEvents';
+import type { PresencePayload } from '@/types/events';
+import { useChatEvents } from './useChatEvents';
 
 const HEARTBEAT_INTERVAL = 30000;
 

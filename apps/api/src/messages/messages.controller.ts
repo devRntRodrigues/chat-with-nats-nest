@@ -1,5 +1,5 @@
 import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
-import { MessageService } from '@/services/message.service';
+import { MessageService } from '@/messages/message.service';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 import { User } from '@/common/decorators/user.decorator';
 import type { AuthUser } from '@/config/passport';

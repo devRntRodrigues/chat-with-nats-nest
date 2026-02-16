@@ -2,7 +2,7 @@ import { Controller, Post, Get, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 import { User } from '@/common/decorators/user.decorator';
 import type { AuthUser } from '@/config/passport';
-import { PresenceService } from '@/services/presence.service';
+import { PresenceService } from '@/presence/presence.service';
 
 @Controller('presence')
 @UseGuards(JwtAuthGuard)

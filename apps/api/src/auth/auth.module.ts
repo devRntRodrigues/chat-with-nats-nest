@@ -5,7 +5,7 @@ import { JwtModule, JwtModuleOptions } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { User, UserSchema } from '@/models/User';
 import { AuthController } from './auth.controller';
-import { AuthService } from '@/services/auth.service';
+import { AuthService } from '@/auth/auth.service';
 import { LocalStrategy, JwtStrategy } from '@/config/passport';
 import { EnvConfig } from '@/config/env';
 
