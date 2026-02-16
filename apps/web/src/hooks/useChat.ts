@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNats } from '@/contexts/NatsContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNotifications } from '@/contexts/NotificationContext';
@@ -25,6 +25,9 @@ export function useChat() {
   const [messages, setMessages] = useState<Record<string, ChatMessage[]>>({});
   const [typingUsers, setTypingUsers] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
+  const loadedConversationsRef = useRef<Set<string>>(new Set());
+  const typingTimersRef = useRef<Map<string, NodeJS.Timeout>>(new Map());
+  const publishedReadIdsRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     if (!user) return;
@@ -44,25 +47,55 @@ export function useChat() {
   useEffect(() => {
     if (!selectedUserId) return;
 
+    if (loadedConversationsRef.current.has(selectedUserId)) return;
+
+    let isCancelled = false;
+
     const loadMessages = async () => {
       try {
         setLoading(true);
         const fetchedMessages = await chatApi.getMessages(selectedUserId);
+
+        if (isCancelled) return;
+
         setMessages((prev) => ({
           ...prev,
           [selectedUserId]: fetchedMessages,
         }));
+
+        loadedConversationsRef.current.add(selectedUserId);
       } catch (error) {
-        console.error('Failed to load messages:', error);
+        if (!isCancelled) {
+          console.error('Failed to load messages:', error);
+        }
       } finally {
-        setLoading(false);
+        if (!isCancelled) {
+          setLoading(false);
+        }
       }
     };
 
-    if (!messages[selectedUserId]) {
-      loadMessages();
+    loadMessages();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [selectedUserId]);
+
+  useEffect(() => {
+    return () => {
+      typingTimersRef.current.forEach((timerId) => {
+        clearTimeout(timerId);
+      });
+      typingTimersRef.current.clear();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isConnected) {
+      publishedReadIdsRef.current.clear();
     }
-  }, [messages, selectedUserId]);
+  }, [isConnected]);
 
   useChatEvents({
     onMessageNew: useCallback((data: MessageNewPayload) => {
@@ -83,31 +116,58 @@ export function useChat() {
 
     onMessageRead: useCallback((data: MessageReadPayload) => {
       setMessages((prev) => {
-        const newMessages = { ...prev };
-        Object.keys(newMessages).forEach((userId) => {
-          newMessages[userId] = newMessages[userId].map((msg) =>
-            data.messageIds.includes(msg._id)
-              ? { ...msg, read: true, readAt: new Date().toISOString() }
-              : msg
-          );
+        const { conversationId, messageIds } = data;
+        
+        if (!conversationId || !prev[conversationId]) {
+          return prev;
+        }
+        
+        const idsToMark = new Set(messageIds);
+        let hasChanges = false;
+        
+        const updatedMessages = prev[conversationId].map((msg) => {
+          if (idsToMark.has(msg._id) && !msg.read) {
+            hasChanges = true;
+            return { ...msg, read: true, readAt: new Date().toISOString() };
+          }
+          return msg;
         });
-        return newMessages;
+        
+        if (!hasChanges) {
+          return prev;
+        }
+        
+        return {
+          ...prev,
+          [conversationId]: updatedMessages,
+        };
       });
+      
+      data.messageIds.forEach(id => publishedReadIdsRef.current.delete(id));
     }, []),
 
     onTyping: useCallback((data: TypingPayload) => {
+      const existingTimer = typingTimersRef.current.get(data.from);
+      if (existingTimer) {
+        clearTimeout(existingTimer);
+        typingTimersRef.current.delete(data.from);
+      }
+
       if (data.action === 'start' && data.username) {
         setTypingUsers((prev) => ({
           ...prev,
           [data.from]: data.username!,
         }));
 
-        setTimeout(() => {
+        const timerId = setTimeout(() => {
           setTypingUsers((prev) => {
             const { [data.from]: _, ...rest } = prev;
             return rest;
           });
+          typingTimersRef.current.delete(data.from);
         }, 3000);
+        
+        typingTimersRef.current.set(data.from, timerId);
       } else if (data.action === 'stop') {
         setTypingUsers((prev) => {
           const { [data.from]: _, ...rest } = prev;
@@ -127,19 +187,47 @@ export function useChat() {
     if (!selectedUserId || !user || !isConnected || !publish) return;
 
     const conversationMessages = messages[selectedUserId] || [];
+    
     const unreadMessageIds = conversationMessages
       .filter((msg) => {
         const fromId = typeof msg.from === 'string' ? msg.from : msg.from._id;
-        return fromId === selectedUserId && !msg.read;
+        return (
+          fromId === selectedUserId && 
+          !msg.read && 
+          !publishedReadIdsRef.current.has(msg._id)
+        );
       })
       .map((msg) => msg._id);
 
-    if (unreadMessageIds.length > 0) {
-      publish('chat.message.read', {
-        userId: user.id,
-        messageIds: unreadMessageIds,
+    if (unreadMessageIds.length === 0) return;
+
+    setMessages((prev) => {
+      const conversationMessages = prev[selectedUserId] || [];
+      const idsToMark = new Set(unreadMessageIds);
+      
+      const updatedMessages = conversationMessages.map((msg) => {
+        if (idsToMark.has(msg._id) && !msg.read) {
+          return { 
+            ...msg, 
+            read: true, 
+            readAt: new Date().toISOString() 
+          };
+        }
+        return msg;
       });
-    }
+      
+      return {
+        ...prev,
+        [selectedUserId]: updatedMessages,
+      };
+    });
+
+    unreadMessageIds.forEach(id => publishedReadIdsRef.current.add(id));
+
+    publish('chat.message.read', {
+      userId: user.id,
+      messageIds: unreadMessageIds,
+    });
   }, [selectedUserId, messages, user, isConnected, publish]);
 
   const sendMessage = useCallback(

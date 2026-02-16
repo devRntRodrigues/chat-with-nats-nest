@@ -234,6 +234,7 @@ export class MessageHandlerService implements OnModuleInit {
 
           this.brokerClient.publish(`chat.user.${senderId}.message.read`, {
             messageIds: senderMessageIds,
+            conversationId: userId, // userId de quem marcou como lida
           });
         }
 
