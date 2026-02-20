@@ -1,13 +1,6 @@
-import {
-  IsString,
-  MinLength,
-  MaxLength,
-  IsOptional,
-  IsArray,
-  ArrayMinSize,
-} from 'class-validator';
+import { IsString, MinLength, IsOptional, IsArray } from 'class-validator';
 import { Transform } from 'class-transformer';
-import { IsObjectId } from './common.dto';
+import { IsObjectId } from '@/common/decorators/is-oject-id.decorator';
 
 export class TypingEventDto {
   @IsString()
@@ -67,8 +60,6 @@ export class MessageSendBrokerDto {
   toUserId: string;
 
   @IsString()
-  @MinLength(1, { message: 'Message content is required' })
-  @MaxLength(5000, { message: 'Message must not exceed 5000 characters' })
   @Transform(({ value }: { value: string }) => value?.trim())
   content: string;
 
@@ -83,7 +74,6 @@ export class MessageReadBrokerDto {
   userId: string;
 
   @IsArray()
-  @ArrayMinSize(1, { message: 'At least one message ID is required' })
   @IsString({ each: true })
   @IsObjectId({ each: true })
   @Transform(({ value }: { value: string[] }) => Array.from(new Set(value)))
