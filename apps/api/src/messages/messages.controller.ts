@@ -3,7 +3,7 @@ import { MessageService } from '@/messages/message.service';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 import { User } from '@/common/decorators/user.decorator';
 import type { AuthUser } from '@/config/passport';
-import { GetMessagesQueryDto } from '@/dto/message.dto';
+import { GetMessagesQueryDto } from '@/messages/message.dto';
 
 @Controller('messages')
 @UseGuards(JwtAuthGuard)

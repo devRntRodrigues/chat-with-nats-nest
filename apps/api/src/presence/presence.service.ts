@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { User, UserDocument } from '../models/User';
+import { User } from '../users/user.schema';
 import { BrokerClientService } from '@/broker/broker-client.service';
 
 interface OnlineUser {
@@ -17,7 +17,7 @@ export class PresenceService {
   private readonly CLEANUP_INTERVAL = 10000; // 10 seconds
 
   constructor(
-    @InjectModel(User.name) private userModel: Model<UserDocument>,
+    @InjectModel(User.name) private userModel: Model<User>,
     private readonly brokerClient: BrokerClientService,
   ) {
     this.startCleanupInterval();

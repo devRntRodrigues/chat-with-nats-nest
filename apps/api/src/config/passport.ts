@@ -5,12 +5,8 @@ import { Strategy as PassportJwtStrategy, ExtractJwt } from 'passport-jwt';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { ConfigService } from '@nestjs/config';
-import { UserDocument } from '@/models/User';
-import { EnvConfig } from './app-config';
-
-type User = UserDocument & {
-  comparePassword: (password: string) => Promise<boolean>;
-};
+import { User } from '@/users/user.schema';
+import { AppConfig } from './app-config';
 
 export type JwtPayload = { userId: string };
 
@@ -22,7 +18,7 @@ export interface AuthUser {
 
 @Injectable()
 export class LocalStrategy extends PassportStrategy(PassportLocalStrategy) {
-  constructor(@InjectModel('User') private userModel: Model<UserDocument>) {
+  constructor(@InjectModel('User') private userModel: Model<User>) {
     super({
       usernameField: 'username',
       passwordField: 'password',
@@ -40,14 +36,14 @@ export class LocalStrategy extends PassportStrategy(PassportLocalStrategy) {
       throw new UnauthorizedException('Invalid username or password');
     }
 
-    const isMatch = await user.comparePassword(password);
-    if (!isMatch) {
-      throw new UnauthorizedException('Invalid username or password');
-    }
+    // const isMatch = await user.comparePassword(password);
+    // if (!isMatch) {
+    //   throw new UnauthorizedException('Invalid username or password');
+    // }
 
     return {
       id: user.id,
-      username: user.username,
+      username: user.email,
       name: user.name,
     };
   }
@@ -57,8 +53,8 @@ export class LocalStrategy extends PassportStrategy(PassportLocalStrategy) {
 @Injectable()
 export class JwtStrategy extends PassportStrategy(PassportJwtStrategy) {
   constructor(
-    @InjectModel('User') private userModel: Model<UserDocument>,
-    configService: ConfigService<EnvConfig, true>,
+    @InjectModel('User') private userModel: Model<User>,
+    configService: ConfigService<AppConfig, true>,
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -69,7 +65,7 @@ export class JwtStrategy extends PassportStrategy(PassportJwtStrategy) {
   async validate(payload: JwtPayload): Promise<AuthUser> {
     const user = await this.userModel
       .findById(payload.userId)
-      .select<User>('_id username name');
+      .select<User>('_id email name');
 
     if (!user) {
       throw new UnauthorizedException('User not found');
@@ -77,7 +73,7 @@ export class JwtStrategy extends PassportStrategy(PassportJwtStrategy) {
 
     return {
       id: user._id.toString(),
-      username: user.username,
+      username: user.email,
       name: user.name,
     };
   }

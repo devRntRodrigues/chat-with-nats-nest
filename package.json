@@ -11,5 +11,14 @@
     "build": "npm run build --workspaces",
     "api:dev": "npm run dev --workspace=apps/api",
     "web:dev": "npm run dev --workspace=apps/web"
+  },
+  "dependencies": {
+    "@casl/ability": "^6.8.0",
+    "@nestjs/cache-manager": "^3.1.0",
+    "@nestjs/throttler": "^6.5.0",
+    "bcrypt": "^6.0.0",
+    "cache-manager": "^7.2.8",
+    "pino-pretty": "^13.1.3",
+    "svg-captcha": "^1.4.0"
   }
 }

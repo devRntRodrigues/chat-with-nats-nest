@@ -3,11 +3,11 @@ import { ConfigService } from '@nestjs/config';
 import { jwtAuthenticator, tokenAuthenticator } from '@nats-io/nats-core';
 import { connect } from '@nats-io/transport-node';
 import { BrokerClientService } from './broker-client.service';
-import { EnvConfig } from '@/config/env';
+import { AppConfig } from '@/config/env';
 
 const brokerConnectionProvider = {
   provide: 'NATS_CONNECTION',
-  useFactory: async (configService: ConfigService<EnvConfig, true>) => {
+  useFactory: async (configService: ConfigService<AppConfig, true>) => {
     const servers = configService.get('broker.servers', { infer: true });
     const authToken = configService.get('broker.authToken', { infer: true });
     const userJwt = configService.get('broker.userJwt', { infer: true });

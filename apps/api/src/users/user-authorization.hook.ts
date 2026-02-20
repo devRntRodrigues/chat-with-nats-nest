@@ -1,7 +1,7 @@
 import { ExecutionContext, Injectable } from '@nestjs/common';
 import { SubjectHook } from '@/iam/authorization/interfaces/subject-hook.interface';
 import { Request } from 'express';
-import { User } from './user.schema';
+import { User } from '@/users/user.schema';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { BrokerContext } from '../broker/broker-context';

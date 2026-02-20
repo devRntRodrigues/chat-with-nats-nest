@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { PassportModule } from '@nestjs/passport';
-import { User, UserSchema } from '@/models/User';
+import { User, UserSchema } from '@/users/user.schema';
 import { PresenceController } from './presence.controller';
 import { PresenceService } from '@/presence/presence.service';
 import { JwtStrategy } from '@/config/passport';
