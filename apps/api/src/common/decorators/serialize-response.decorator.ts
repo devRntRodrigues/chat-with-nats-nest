@@ -4,5 +4,5 @@ import { ResponseSerializerInterceptor } from '../interceptors/response-serializ
 import { ClassTransformOptions } from 'class-transformer';
 
 export function SerializeResponse(dto: Type, options?: ClassTransformOptions) {
-  return UseInterceptors(new ResponseSerializerInterceptor(dto, options));
+  return UseInterceptors(ResponseSerializerInterceptor(dto, options));
 }

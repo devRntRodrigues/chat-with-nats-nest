@@ -1,4 +1,4 @@
-import { Msg } from 'nats';
+import type { Msg } from '@nats-io/nats-core';
 
 interface Handler {
   (topic: string, payload: any, message: Msg): void;

@@ -68,11 +68,10 @@ export class BrokerContext extends BaseRpcContext<BrokerContextArgs> {
     const headers = this.getHeaders();
 
     if (headers) {
-      activeUser.name = headers.has('name')
-        ? headers.get('name')
-        : activeUser.name;
+      const nameVal = headers.get('name');
+      if (nameVal) activeUser.name = nameVal;
 
-      if (headers.has('isAdmin') && headers.get('isAdmin') === 'true') {
+      if (headers.get('isAdmin') === 'true') {
         activeUser.roles = [Roles.APP_ADMIN];
         activeUser.local = {
           ...activeUser.local,
@@ -80,12 +79,13 @@ export class BrokerContext extends BaseRpcContext<BrokerContextArgs> {
         };
       }
 
-      if (headers.has('type') && headers.get('type') === 'INTERNAL') {
+      if (headers.get('type') === 'INTERNAL') {
         activeUser.type = 'INTERNAL' as ActiveUserType;
       }
 
-      if (headers.has('roles')) {
-        activeUser.roles = headers.get('roles').split(',') as Roles[];
+      const rolesVal = headers.get('roles');
+      if (rolesVal) {
+        activeUser.roles = rolesVal.split(',') as Roles[];
       }
     }
 
