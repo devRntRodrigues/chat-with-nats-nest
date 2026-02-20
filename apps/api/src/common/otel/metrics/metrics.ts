@@ -7,8 +7,8 @@ import {
   ObservableUpDownCounter,
   metrics,
   MetricOptions,
-} from "@opentelemetry/api";
-import { OTEL_SERVICE_NAME } from "../otel.constants";
+} from '@opentelemetry/api';
+import { OTEL_SERVICE_NAME } from '../otel.constants';
 
 export type GenericMetric =
   | Counter

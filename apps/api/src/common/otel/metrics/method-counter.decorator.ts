@@ -3,7 +3,7 @@ import { getOrCreateCounter } from './metrics';
 import {
   copyMetadataFromFunctionToFunction,
   toSnakeCase,
-} from '@/config/otel/otel.utils';
+} from '@/common/otel/otel.utils';
 
 export const OtelMethodCounter =
   (name?: string, options?: MetricOptions) =>

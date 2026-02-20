@@ -1,15 +1,16 @@
 import { CustomTransportStrategy, Server } from '@nestjs/microservices';
-import { Msg } from 'nats';
+import { Msg } from '@nats-io/nats-core';
 import { BrokerContext } from './broker-context';
 import { BrokerClientService } from './broker-client.service';
 import { BrokerRouter } from './broker-router';
 import { BrokerMicroserviceConfig } from './broker.types';
-import { NO_MESSAGE_HANDLER } from '@nestjs/microservices/constants';
+import { Logger } from '@nestjs/common';
 import { SpanStatusCode, trace } from '@opentelemetry/api';
-import { OTEL_SERVICE_NAME } from '@/config/otel/otel.constants';
-import { useContextPropagation } from '@/config/otel/traces/context-propagation';
+import { OTEL_SERVICE_NAME } from '@/common/otel/otel.constants';
+import { useContextPropagation } from '@/common/otel/traces/context-propagation';
 
 export class BrokerServer extends Server implements CustomTransportStrategy {
+  readonly logger = new Logger(BrokerServer.name);
   private readonly brokerRouter: BrokerRouter;
 
   constructor(
@@ -20,7 +21,7 @@ export class BrokerServer extends Server implements CustomTransportStrategy {
     this.brokerRouter = new BrokerRouter();
   }
 
-  async listen(callback: (err?: unknown) => void) {
+  public listen(callback: (err?: unknown) => void) {
     try {
       this.registerSubscriptions();
       this.addRoutes(callback);
@@ -33,9 +34,18 @@ export class BrokerServer extends Server implements CustomTransportStrategy {
     this.brokerClient.disconnect(true);
   }
 
+  on() {
+    throw new Error('Method not implemented.');
+  }
+
+  unwrap<T = never>(): T {
+    throw new Error('Method not implemented.');
+  }
+
   public addRoutes(callback: (err?: unknown) => void) {
     const registeredPatterns = [...this.messageHandlers.keys()];
     registeredPatterns.forEach((pattern) => {
+      this.logger.log(`Register route to topic: ${pattern}`);
       this.brokerRouter.addRoute(
         pattern,
         this.getMessageHandler(pattern).bind(this),
@@ -46,38 +56,40 @@ export class BrokerServer extends Server implements CustomTransportStrategy {
   }
 
   public getMessageHandler(pattern: string) {
-    return async (topic: string, payload: any, message: Msg) =>
+    return (topic: string, payload: any, message: Msg) =>
       this.handleMessage(pattern, topic, payload, message);
   }
 
-  public async handleMessage(
+  public handleMessage(
     pattern: string,
     topic: string,
     payload: any,
     message: Msg,
-  ): Promise<any> {
+  ): void {
     const context = new BrokerContext([
       topic,
+      payload,
       message,
       this.brokerClient,
       pattern,
     ]);
 
-    const publish = this.getPublisher(message);
     const handler = this.getHandlerByPattern(pattern);
 
-    if (!handler) {
-      const status = 'error';
-      const noHandlerPacket = {
-        status,
-        err: NO_MESSAGE_HANDLER,
-      };
-      return publish(noHandlerPacket);
-    }
+    if (handler) {
+      const response$ = this.transformToObservable(handler(payload, context));
 
-    const response$ = this.transformToObservable(handler(payload, context));
-    // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-    response$ && this.send(response$, publish);
+      // if handler is event handler, we can't send response
+      const isEventHandler = handler.isEventHandler;
+
+      if (isEventHandler) {
+        return;
+      }
+
+      const publish = this.getPublisher(message);
+
+      if (response$) this.send(response$, publish);
+    }
   }
 
   public getPublisher(message: Msg) {
@@ -145,13 +157,5 @@ export class BrokerServer extends Server implements CustomTransportStrategy {
         queue,
       });
     });
-  }
-
-  on() {
-    throw new Error('Method not implemented.');
-  }
-
-  unwrap<T = never>(): T {
-    throw new Error('Method not implemented.');
   }
 }

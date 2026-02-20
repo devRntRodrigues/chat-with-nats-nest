@@ -146,7 +146,7 @@ export class MessageHandlerService implements OnModuleInit {
         from: {
           id: fromUser._id.toString(),
           name: fromUser.name,
-          username: fromUser.username,
+          username: fromUser.email,
         },
         message: 'New message',
         preview: content.substring(0, 100),

@@ -13,9 +13,12 @@
     "web:dev": "npm run dev --workspace=apps/web"
   },
   "dependencies": {
+    "@aws-sdk/client-sns": "^3.994.0",
     "@casl/ability": "^6.8.0",
     "@nestjs/cache-manager": "^3.1.0",
+    "@nestjs/event-emitter": "^3.0.1",
     "@nestjs/throttler": "^6.5.0",
+    "axios": "^1.13.5",
     "bcrypt": "^6.0.0",
     "cache-manager": "^7.2.8",
     "pino-pretty": "^13.1.3",

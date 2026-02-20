@@ -4,7 +4,7 @@ import {
   SpanStatusCode,
   trace,
 } from '@opentelemetry/api';
-import { copyMetadataFromFunctionToFunction } from '@/config/otel/otel.utils';
+import { copyMetadataFromFunctionToFunction } from '@/common/otel/otel.utils';
 import { OTEL_SERVICE_NAME } from '../otel.constants';
 import { safeStringify } from '@/config/utils';
 

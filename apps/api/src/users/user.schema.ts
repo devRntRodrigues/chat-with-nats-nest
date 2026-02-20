@@ -3,12 +3,15 @@ import { Roles } from '@/iam/authorization/roles.constants';
 import { BaseSchemaWithTimestamps } from '../common/schema/base-schema';
 import { Exclude } from 'class-transformer';
 import { baseSchemaOptionsWithTimestamps } from '../common/schema/schema-options';
+import { HydratedDocument } from 'mongoose';
 
 export enum UserStatus {
   ACTIVE = 'active',
   INACTIVE = 'inactive',
   PENDING = 'pending',
 }
+
+export type UserDocument = HydratedDocument<User>;
 
 @Schema(baseSchemaOptionsWithTimestamps)
 export class User extends BaseSchemaWithTimestamps {
@@ -39,6 +42,9 @@ export class User extends BaseSchemaWithTimestamps {
     default: [Roles.SUPPORT],
   })
   roles: Roles[];
+
+  @Prop()
+  externalId: string;
 
   @Prop({ default: false })
   isDev: boolean;

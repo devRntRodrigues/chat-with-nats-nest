@@ -1,6 +1,6 @@
-import { Injectable } from "@nestjs/common";
-import { getOrCreateCounter } from "./metrics";
-import { MetricOptions } from "@opentelemetry/api";
+import { Injectable } from '@nestjs/common';
+import { getOrCreateCounter } from './metrics';
+import { MetricOptions } from '@opentelemetry/api';
 
 @Injectable()
 export class OtelMetricService {

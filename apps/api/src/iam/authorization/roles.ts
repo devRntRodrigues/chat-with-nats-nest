@@ -1,6 +1,8 @@
 import type { User } from '@/users/user.schema';
 import { Roles } from './roles.constants';
 
+export { Roles };
+
 export type Action =
   | 'manage'
   | 'create'

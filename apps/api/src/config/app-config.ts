@@ -67,6 +67,8 @@ const envSchema = z.object({
   BROKER_AUTH_TOKEN: z.string().optional(),
   BROKER_USER_JWT: z.string().optional(),
   BROKER_USER_SEED: z.string().optional(),
+  BROKER_ACCOUNT_ID: z.string().optional(),
+  BROKER_ACCOUNT_SEED: z.string().optional(),
 });
 
 export interface AppConfig {
@@ -90,6 +92,8 @@ export interface AppConfig {
     authToken?: string;
     userJwt?: string;
     userSeed?: string;
+    accountId?: string;
+    accountSeed?: string;
   };
   jwt: {
     secret: string;
@@ -130,6 +134,8 @@ export function validateEnv(config: Record<string, unknown>): AppConfig {
       authToken: env.BROKER_AUTH_TOKEN,
       userJwt: env.BROKER_USER_JWT,
       userSeed: env.BROKER_USER_SEED,
+      accountId: env.BROKER_ACCOUNT_ID,
+      accountSeed: env.BROKER_ACCOUNT_SEED,
     },
     jwt: {
       secret: env.JWT_SECRET,

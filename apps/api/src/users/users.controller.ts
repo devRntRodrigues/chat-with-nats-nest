@@ -1,23 +1,62 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
-import { UserService } from '@/users/user.service';
-import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
-import { User } from '@/common/decorators/user.decorator';
-import type { AuthUser } from '@/config/passport';
+import { OAuthGuard } from '@/oauth/oauth.guard';
+import {
+  Body,
+  Controller,
+  Param,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
+import { ChangePhoneNumberParamsDto } from './dto/change-phone-number-params.dto';
+import { ChangePhoneNumberDto } from './dto/change-phone-number.dto';
+import { CreateUserQueryParamsDto } from './dto/create-user-query-params.dto';
+import { CreateUserDto } from './dto/create-user.dto';
+import { ChangePhoneNumberHandler } from './handlers/change-phone-number.handler';
+import {
+  CreateUserHandler,
+  CreateUserHandlerOutput,
+} from './handlers/create-user.handler';
+import { CreateUserMemberDto } from './dto/create-user-member.dto';
+import { CreateUserMemberHandler } from './handlers/create-user-member.handler';
 
 @Controller('users')
-@UseGuards(JwtAuthGuard)
 export class UsersController {
-  constructor(private readonly userService: UserService) {}
+  constructor(
+    private readonly createUserHandler: CreateUserHandler,
+    private readonly changePhoneNumberHandler: ChangePhoneNumberHandler,
+    private readonly createUserMemberHandler: CreateUserMemberHandler,
+  ) {}
 
-  @Get('me')
-  async getCurrentUser(@User() user: AuthUser) {
-    const result = await this.userService.getCurrentUserById(user.id);
-    return { user: result };
+  @Post()
+  async createUser(
+    @Query() query: CreateUserQueryParamsDto,
+    @Body() createUserDto: CreateUserDto,
+  ): Promise<CreateUserHandlerOutput> {
+    const { token } = query;
+
+    return await this.createUserHandler.execute({
+      token,
+      createUserData: createUserDto,
+    });
   }
 
-  @Get()
-  async getAllUsers(@User() user: AuthUser) {
-    const users = await this.userService.getAllUsersExcept(user.id);
-    return { users };
+  @UseGuards(OAuthGuard)
+  @Post('/:userId/change-phone')
+  async changePhoneNumber(
+    @Param() params: ChangePhoneNumberParamsDto,
+    @Body() changePhoneNumberDto: ChangePhoneNumberDto,
+  ) {
+    const { userId } = params;
+
+    return await this.changePhoneNumberHandler.execute({
+      externalUserId: userId,
+      changePhoneNumberDto,
+    });
+  }
+
+  @UseGuards(OAuthGuard)
+  @Post('/create-member')
+  async createUserMember(@Body() dto: CreateUserMemberDto) {
+    return await this.createUserMemberHandler.execute(dto);
   }
 }
