@@ -1,11 +1,11 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { User, UserDocument } from '../models/User';
+import { User } from './user.schema';
 
 @Injectable()
 export class UserService {
-  constructor(@InjectModel(User.name) private userModel: Model<UserDocument>) {}
+  constructor(@InjectModel(User.name) private userModel: Model<User>) {}
 
   async getCurrentUserById(userId: string) {
     const user = await this.userModel.findById(userId).lean();
@@ -17,7 +17,7 @@ export class UserService {
     return {
       id: user._id.toString(),
       name: user.name,
-      username: user.username,
+      username: user.email,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
     };

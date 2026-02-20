@@ -10,7 +10,7 @@ import { MessagesModule } from './messages/messages.module';
 import { HealthModule } from './health/health.module';
 import { PresenceModule } from './presence/presence.module';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
-import { validateEnv, EnvConfig } from './config/app-config';
+import { validateEnv, AppConfig } from './config/app-config';
 import { getMongooseConfig } from './config/db';
 import { BrokerModule } from './broker/broker.module';
 
@@ -22,7 +22,7 @@ import { BrokerModule } from './broker/broker.module';
     }),
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
-      useFactory: (configService: ConfigService<EnvConfig, true>) => {
+      useFactory: (configService: ConfigService<AppConfig, true>) => {
         const uri = configService.get('db.uri', { infer: true });
         return getMongooseConfig(uri);
       },

@@ -1,17 +1,17 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { Message, MessageDocument } from '../models/Message';
-import { Conversation, ConversationDocument } from '../models/Conversation';
-import { User, UserDocument } from '../models/User';
+import { Message } from '../models/Message';
+import { Conversation } from '../models/Conversation';
+import { User } from '../users/user.schema';
 
 @Injectable()
 export class MessageService {
   constructor(
-    @InjectModel(Message.name) private messageModel: Model<MessageDocument>,
+    @InjectModel(Message.name) private messageModel: Model<Message>,
     @InjectModel(Conversation.name)
-    private conversationModel: Model<ConversationDocument>,
-    @InjectModel(User.name) private userModel: Model<UserDocument>,
+    private conversationModel: Model<Conversation>,
+    @InjectModel(User.name) private userModel: Model<User>,
   ) {}
 
   async getUnreadCounts(userId: string): Promise<Record<string, number>> {

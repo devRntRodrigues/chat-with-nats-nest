@@ -3,7 +3,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { PassportModule } from '@nestjs/passport';
 import { Message, MessageSchema } from '@/models/Message';
 import { Conversation, ConversationSchema } from '@/models/Conversation';
-import { User, UserSchema } from '@/models/User';
+import { User, UserSchema } from '@/users/user.schema';
 import { MessagesController } from './messages.controller';
 import { MessageService } from '@/messages/message.service';
 import { MessageHandlerService } from '@/messages/handlers/message-handler.service';

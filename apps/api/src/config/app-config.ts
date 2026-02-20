@@ -4,6 +4,7 @@ export enum NodeEnvironment {
   DEVELOPMENT = 'development',
   PRODUCTION = 'production',
   TEST = 'test',
+  STAGING = 'staging',
 }
 
 export enum AppEnvironment {
@@ -68,7 +69,7 @@ const envSchema = z.object({
   BROKER_USER_SEED: z.string().optional(),
 });
 
-export interface EnvConfig {
+export interface AppConfig {
   nodeEnv: NodeEnvironment;
   appEnv: AppEnvironment;
   logLevel: LogLevel;
@@ -97,7 +98,7 @@ export interface EnvConfig {
   corsOrigin?: string;
 }
 
-export function validateEnv(config: Record<string, unknown>): EnvConfig {
+export function validateEnv(config: Record<string, unknown>): AppConfig {
   const parsed = envSchema.safeParse(config);
 
   if (!parsed.success) {

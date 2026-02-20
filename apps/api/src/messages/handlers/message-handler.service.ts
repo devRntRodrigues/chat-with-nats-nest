@@ -1,9 +1,9 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { Message, MessageDocument } from '@/models/Message';
-import { Conversation, ConversationDocument } from '@/models/Conversation';
-import { User, UserDocument } from '../../models/User';
+import { Message } from '@/models/Message';
+import { Conversation } from '@/models/Conversation';
+import { User } from '../../users/user.schema';
 import { BrokerClientService } from '@/broker/broker-client.service';
 import type { Msg } from '@nats-io/nats-core';
 
@@ -29,10 +29,10 @@ export class MessageHandlerService implements OnModuleInit {
   private readonly logger = new Logger(MessageHandlerService.name);
 
   constructor(
-    @InjectModel(Message.name) private messageModel: Model<MessageDocument>,
+    @InjectModel(Message.name) private messageModel: Model<Message>,
     @InjectModel(Conversation.name)
-    private conversationModel: Model<ConversationDocument>,
-    @InjectModel(User.name) private userModel: Model<UserDocument>,
+    private conversationModel: Model<Conversation>,
+    @InjectModel(User.name) private userModel: Model<User>,
     private readonly brokerClient: BrokerClientService,
   ) {}
 
