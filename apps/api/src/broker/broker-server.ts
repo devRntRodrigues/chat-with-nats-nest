@@ -6,8 +6,8 @@ import { BrokerRouter } from './broker-router';
 import { BrokerMicroserviceConfig } from './broker.types';
 import { NO_MESSAGE_HANDLER } from '@nestjs/microservices/constants';
 import { SpanStatusCode, trace } from '@opentelemetry/api';
-import { OTEL_SERVICE_NAME } from '@/config/otel/otel.constants';
-import { useContextPropagation } from '@/config/otel/traces/context-propagation';
+import { OTEL_SERVICE_NAME } from '@/common/otel/otel.constants';
+import { useContextPropagation } from '@/common/otel/traces/context-propagation';
 
 export class BrokerServer extends Server implements CustomTransportStrategy {
   private readonly brokerRouter: BrokerRouter;
