@@ -26,13 +26,6 @@ export function IsObjectId(validationOptions?: ValidationOptions) {
 }
 
 export class PaginationDto {
-  @ApiPropertyOptional({
-    description: 'Number of items to return',
-    minimum: 1,
-    maximum: 100,
-    default: 30,
-    example: 30,
-  })
   @IsOptional()
   @Type(() => Number)
   @IsInt()
@@ -40,10 +33,6 @@ export class PaginationDto {
   @Max(100)
   limit?: number = 30;
 
-  @ApiPropertyOptional({
-    description: 'Cursor for pagination (ObjectId)',
-    example: '507f1f77bcf86cd799439011',
-  })
   @IsOptional()
   @IsString()
   @IsObjectId()
