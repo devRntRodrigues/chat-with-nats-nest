@@ -1,46 +1,31 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, Schema as MongooseSchema, Types } from 'mongoose';
+import { IsOptional, IsString, IsDate, IsNotEmpty } from 'class-validator';
+import { Types, HydratedDocument } from 'mongoose';
+import { baseSchemaOptionsWithTimestamps } from '@/common/schema/schema-options';
+import { BaseSchemaWithTimestamps } from '@/common/schema/base-schema';
 
-export type ConversationDocument = Conversation & Document;
+export type ConversationDocument = HydratedDocument<Conversation>;
 
-@Schema({
-  timestamps: true,
-})
-export class Conversation {
-  @Prop({
-    type: [MongooseSchema.Types.ObjectId],
-    ref: 'User',
-    required: true,
-    validate: {
-      validator: function (v: Types.ObjectId[]) {
-        return v.length === 2;
-      },
-      message: 'A conversation must have exactly 2 participants',
-    },
-  })
+@Schema(baseSchemaOptionsWithTimestamps)
+export class Conversation extends BaseSchemaWithTimestamps {
+  @Prop()
   participants: Types.ObjectId[];
 
-  @Prop({
-    type: MongooseSchema.Types.ObjectId,
-    ref: 'Message',
-    default: null,
-  })
+  @Prop()
+  @IsOptional()
+  @IsString()
   lastMessage?: Types.ObjectId;
 
-  @Prop({
-    default: '',
-    maxlength: 100,
-  })
+  @Prop()
+  @IsOptional()
+  @IsString()
   lastMessagePreview?: string;
 
-  @Prop({
-    default: Date.now,
-    index: true,
-  })
+  @Prop()
+  @IsOptional()
+  @IsDate()
+  @IsNotEmpty()
   lastMessageAt: Date;
-
-  createdAt: Date;
-  updatedAt: Date;
 }
 
 export const ConversationSchema = SchemaFactory.createForClass(Conversation);

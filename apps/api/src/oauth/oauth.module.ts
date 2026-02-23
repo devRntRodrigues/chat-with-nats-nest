@@ -1,7 +1,12 @@
-import { AuthModule } from '@/auth/auth.module';
 import { BrokerModule } from '@/broker/broker.module';
+import { JwtStrategy } from '@/config/passport';
+import { User, UserSchema } from '@/users/user.schema';
 import { Module, forwardRef } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { JwtModule } from '@nestjs/jwt';
 import { MongooseModule } from '@nestjs/mongoose';
+import { PassportModule } from '@nestjs/passport';
+import { AppConfig } from '@/config/app-config';
 import { UsersModule } from '../users/users.module';
 import { Client, ClientSchema } from './client.schema';
 import { DeleteClientHandler } from './handlers/delete-client.handler';
@@ -17,13 +22,28 @@ import { OAuthController } from './oauth.controller';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: Client.name, schema: ClientSchema }]),
-    AuthModule,
+    MongooseModule.forFeature([
+      { name: Client.name, schema: ClientSchema },
+      { name: User.name, schema: UserSchema },
+    ]),
+    ConfigModule,
+    JwtModule.registerAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (config: ConfigService<AppConfig, true>) => ({
+        secret: config.get('jwt.secret', { infer: true }),
+        signOptions: {
+          expiresIn: config.get('jwt.expiresIn', { infer: true }),
+        },
+      }),
+    }),
+    PassportModule.register({ defaultStrategy: 'jwt' }),
     forwardRef(() => UsersModule),
     BrokerModule,
   ],
   controllers: [OAuthController],
   providers: [
+    JwtStrategy,
     SendVerificationCodeHandler,
     FindClientByIdHandler,
     FindClientByClientIdHandler,
@@ -35,6 +55,9 @@ import { OAuthController } from './oauth.controller';
     NewClientHandler,
   ],
   exports: [
+    JwtModule,
+    PassportModule,
+    JwtStrategy,
     SendVerificationCodeHandler,
     FindClientByIdHandler,
     FindClientByClientIdHandler,

@@ -1,47 +1,33 @@
+import { BaseSchemaWithTimestamps } from '@/common/schema/base-schema';
+import { baseSchemaOptionsWithTimestamps } from '@/common/schema/schema-options';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, Schema as MongooseSchema, Types } from 'mongoose';
+import { IsBoolean, IsNotEmpty, IsDate, IsOptional } from 'class-validator';
+import { HydratedDocument, Types } from 'mongoose';
 
-export type MessageDocument = Message & Document;
+export type MessageDocument = HydratedDocument<Message>;
 
-@Schema({
-  timestamps: { createdAt: true, updatedAt: false },
-})
-export class Message {
-  @Prop({
-    type: MongooseSchema.Types.ObjectId,
-    ref: 'User',
-    required: [true, 'Sender is required'],
-    index: true,
-  })
+@Schema(baseSchemaOptionsWithTimestamps)
+export class Message extends BaseSchemaWithTimestamps {
+  @Prop()
+  @IsNotEmpty()
   from: Types.ObjectId;
 
-  @Prop({
-    type: MongooseSchema.Types.ObjectId,
-    ref: 'User',
-    required: [true, 'Recipient is required'],
-    index: true,
-  })
+  @Prop()
+  @IsNotEmpty()
   to: Types.ObjectId;
 
-  @Prop({
-    required: [true, 'Message content is required'],
-    trim: true,
-    maxlength: [5000, 'Message must not exceed 5000 characters'],
-  })
+  @Prop()
+  @IsNotEmpty()
   content: string;
 
-  @Prop({
-    default: false,
-    index: true,
-  })
+  @Prop()
+  @IsBoolean()
   read: boolean;
 
-  @Prop({
-    default: null,
-  })
+  @Prop()
+  @IsOptional()
+  @IsDate()
   readAt?: Date;
-
-  createdAt: Date;
 }
 
 export const MessageSchema = SchemaFactory.createForClass(Message);
