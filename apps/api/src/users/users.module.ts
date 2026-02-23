@@ -1,4 +1,3 @@
-import { AuthModule } from '@/auth/auth.module';
 import { Module, forwardRef } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { User, UserSchema } from '@/users/user.schema';
@@ -15,7 +14,6 @@ import { OAuthModule } from '@/oauth/oauth.module';
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
-    AuthModule,
     forwardRef(() => OAuthModule),
   ],
   controllers: [UsersController],

@@ -5,7 +5,6 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 // import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { AuthModule } from './auth/auth.module';
 import { OAuthModule } from './oauth/oauth.module';
 import { UsersModule } from './users/users.module';
 import { MessagesModule } from './messages/messages.module';
@@ -35,7 +34,6 @@ import { BrokerModule } from './broker/broker.module';
     CacheModule.register({ isGlobal: true }),
     LoggerModule,
     OtelModule,
-    AuthModule,
     OAuthModule,
     UsersModule,
     MessagesModule,
